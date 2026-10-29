@@ -1,460 +1,140 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Fútbol Libre - Agenda Futbolística y Deportes En Vivo</title>
-    <!-- Tailwind CSS CDN -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- FontAwesome Icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        flgreen: {
-                            HEADER: '#0a6b32',
-                            TEXT: '#0d7338',
-                            BANNER: '#12823e',
-                            HOVER: '#f3f9f4'
-                        }
-                    }
-                }
-            }
-        }
-    </script>
-    <!-- Google Fonts Inter / Arial Fallback -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <style>
-        body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-            background-color: #ffffff;
-            color: #333333;
-        }
-        .agenda-row {
-            transition: background-color 0.15s ease-in-out;
-        }
-        .agenda-row:hover {
-            background-color: #f7faf8;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Fútbol Libre</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #ffffff;
+      color: #333333;
+    }
+    .header {
+      text-align: center;
+      padding: 20px 10px 10px;
+    }
+    .header h1 {
+      color: #0d7338;
+      font-size: 2.2rem;
+      margin: 0 0 15px;
+    }
+    .header p {
+      max-width: 900px;
+      margin: 0 auto 12px;
+      font-size: 0.95rem;
+      line-height: 1.4;
+      color: #444;
+    }
+    .header p strong {
+      color: #0d7338;
+    }
+    .agenda-container {
+      max-width: 950px;
+      margin: 20px auto;
+      padding: 0 10px;
+    }
+    .agenda-header {
+      background-color: #12823e;
+      color: white;
+      text-align: center;
+      padding: 8px 15px;
+      font-weight: bold;
+      border-top-left-radius: 8px;
+      border-top-right-radius: 8px;
+      font-size: 1rem;
+    }
+    .match-row {
+      display: flex;
+      align-items: center;
+      padding: 10px 15px;
+      border-bottom: 1px solid #e0e0e0;
+      cursor: pointer;
+      transition: background-color 0.15s ease;
+    }
+    .match-row:hover {
+      background-color: #f5f5f5;
+    }
+    .match-time {
+      font-weight: bold;
+      width: 60px;
+      flex-shrink: 0;
+      font-size: 0.9rem;
+    }
+    .match-icon {
+      width: 30px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin-right: 10px;
+      flex-shrink: 0;
+    }
+    .match-icon img {
+      width: 20px;
+      height: 15px;
+      object-fit: cover;
+    }
+    .match-title {
+      font-size: 0.95rem;
+    }
+    .match-title .tournament {
+      font-weight: bold;
+    }
+    /* Estilos del reproductor */
+    .player-modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.85);
+      z-index: 1000;
+      justify-content: center;
+      align-items: center;
+    }
+    .player-content {
+      background: #111;
+      width: 90%;
+      max-width: 800px;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 0 20px rgba(0,0,0,0.5);
+    }
+    .player-header {
+      background: #12823e;
+      color: white;
+      padding: 10px 15px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .close-btn {
+      background: none;
+      border: none;
+      color: white;
+      font-size: 1.5rem;
+      cursor: pointer;
+    }
+    .iframe-wrapper {
+      position: relative;
+      padding-bottom: 56.25%;
+      height: 0;
+    }
+    .iframe-wrapper iframe {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      border: 0;
+    }
+  </style>
 </head>
-<body class="min-h-screen bg-white text-gray-800 antialiased py-6 px-3 sm:px-6">
+<body>
 
-    <!-- MAIN CONTAINER -->
-    <main class="max-w-4xl mx-auto">
-
-        <!-- MAIN TITLE HEADER -->
-        <header class="text-center my-6">
-            <h1 class="text-3xl sm:text-4xl font-extrabold text-[#0d7338] tracking-tight cursor-pointer" onclick="resetFilters()">
-                Fútbol Libre
-            </h1>
-        </header>
-
-        <!-- DESCRIPTION PARAGRAPHS -->
-        <section class="max-w-3xl mx-auto text-sm sm:text-[15px] leading-relaxed text-gray-700 space-y-3 mb-8">
-            <p>
-                <strong class="text-[#0d7338] font-bold">Fútbol Libre</strong> organiza la agenda futbolística diaria con horarios, torneos y señales deportivas para consultar los principales partidos desde un solo lugar.
-            </p>
-            <p>
-                Encuentra información sobre el fútbol de <strong>Argentina</strong>, <strong>México</strong>, <strong>Ecuador</strong>, <strong>Chile</strong>, <strong>España</strong>, <strong>Uruguay</strong>, <strong>Bolivia</strong> y <strong>Perú</strong>, además de ligas internacionales y competiciones de clubes y selecciones.
-            </p>
-            <p>
-                En <strong class="text-[#0d7338] font-bold">Fútbol Libre</strong> puedes revisar la hora de cada encuentro, la programación del día y los <strong>canales deportivos en calidad HD</strong> encargados de su cobertura.
-            </p>
-        </section>
-
-        <!-- SEARCH AND FILTER CONTROLS -->
-        <div class="mb-4 flex flex-col md:flex-row gap-3 items-center justify-between">
-            <!-- Filter Pills -->
-            <div class="flex flex-wrap gap-1.5 sm:gap-2 w-full md:w-auto">
-                <button onclick="filterCategory('all')" id="btn-all" class="cat-btn px-3 py-1.5 text-xs sm:text-sm font-semibold rounded-md bg-[#12823e] text-white shadow-sm">Todos</button>
-                <button onclick="filterCategory('futbol')" id="btn-futbol" class="cat-btn px-3 py-1.5 text-xs sm:text-sm font-semibold rounded-md bg-gray-100 text-gray-700 hover:bg-gray-200">Fútbol</button>
-                <button onclick="filterCategory('otros')" id="btn-otros" class="cat-btn px-3 py-1.5 text-xs sm:text-sm font-semibold rounded-md bg-gray-100 text-gray-700 hover:bg-gray-200">NBA / NFL / NHL</button>
-                <button onclick="filterCategory('canales')" id="btn-canales" class="cat-btn px-3 py-1.5 text-xs sm:text-sm font-semibold rounded-md bg-gray-100 text-gray-700 hover:bg-gray-200">Canales 24/7</button>
-            </div>
-
-            <!-- Search Box -->
-            <div class="relative w-full md:w-64">
-                <input type="text" id="searchInput" oninput="renderAgenda()" placeholder="Buscar equipo o torneo..." class="w-full pl-9 pr-3 py-1.5 text-xs sm:text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#12823e] focus:border-transparent">
-                <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-gray-400 text-xs sm:text-sm"></i>
-            </div>
-        </div>
-
-        <!-- AGENDA CONTAINER TABLE -->
-        <div class="border border-gray-300 rounded-lg overflow-hidden shadow-sm bg-white mb-8">
-            
-            <!-- GREEN HEADER BAR -->
-            <div class="bg-[#12823e] text-white text-center py-2.5 px-4 font-bold text-sm sm:text-base tracking-wide flex justify-between items-center">
-                <span class="w-full text-center">Agenda - 29 de octubre de 2026</span>
-            </div>
-
-            <!-- AGENDA LIST ROWS -->
-            <div id="agendaList" class="divide-y divide-gray-200 text-xs sm:text-sm text-gray-900 font-medium">
-                <!-- Dynamically populated from JS -->
-            </div>
-        </div>
-
-        <!-- 24/7 CHANNELS SECTION -->
-        <section class="mt-8 border border-gray-200 rounded-lg p-4 bg-gray-50">
-            <h2 class="text-sm sm:text-base font-bold text-[#0d7338] mb-3 text-center sm:text-left flex items-center justify-center sm:justify-start gap-2">
-                <i class="fa-solid fa-tv"></i> Canales En Vivo 24/7
-            </h2>
-            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2">
-                <button onclick="openChannelDirect('ESPN HD', 'ESPN')" class="p-2.5 bg-white border border-gray-200 hover:border-[#12823e] rounded-md font-bold text-xs text-gray-800 text-center hover:bg-green-50 transition shadow-sm">
-                    ESPN HD
-                </button>
-                <button onclick="openChannelDirect('TNT Sports HD', 'TNT Sports')" class="p-2.5 bg-white border border-gray-200 hover:border-[#12823e] rounded-md font-bold text-xs text-gray-800 text-center hover:bg-green-50 transition shadow-sm">
-                    TNT Sports HD
-                </button>
-                <button onclick="openChannelDirect('TyC Sports', 'TyC Sports')" class="p-2.5 bg-white border border-gray-200 hover:border-[#12823e] rounded-md font-bold text-xs text-gray-800 text-center hover:bg-green-50 transition shadow-sm">
-                    TyC Sports
-                </button>
-                <button onclick="openChannelDirect('Fox Sports Premium', 'Fox Sports')" class="p-2.5 bg-white border border-gray-200 hover:border-[#12823e] rounded-md font-bold text-xs text-gray-800 text-center hover:bg-green-50 transition shadow-sm">
-                    Fox Sports
-                </button>
-                <button onclick="openChannelDirect('TV Pública HD', 'TV Pública')" class="p-2.5 bg-white border border-gray-200 hover:border-[#12823e] rounded-md font-bold text-xs text-gray-800 text-center hover:bg-green-50 transition shadow-sm col-span-2 sm:col-span-1">
-                    TV Pública
-                </button>
-            </div>
-        </section>
-
-    </main>
-
-    <!-- STREAMING MODAL -->
-    <div id="streamModal" class="fixed inset-0 bg-black/80 z-50 hidden flex items-center justify-center p-2 sm:p-4 backdrop-blur-sm">
-        <div class="bg-gray-900 border border-gray-800 rounded-lg overflow-hidden w-full max-w-5xl text-white shadow-2xl flex flex-col max-h-[95vh]">
-            
-            <!-- Modal Header -->
-            <div class="bg-[#0a6b32] px-4 py-3 flex items-center justify-between text-white border-b border-green-800">
-                <div class="flex items-center gap-2 overflow-hidden">
-                    <span id="modalFlag" class="text-lg"></span>
-                    <h3 id="modalTitle" class="font-bold text-sm sm:text-base truncate"></h3>
-                </div>
-                <button onclick="closeModal()" class="text-white hover:text-red-300 font-bold text-xl px-2">
-                    <i class="fa-solid fa-xmark"></i>
-                </button>
-            </div>
-
-            <!-- Server Options Links Bar -->
-            <div id="channelOptions" class="bg-gray-800 px-4 py-2 border-b border-gray-700 flex flex-wrap gap-2 text-xs font-semibold">
-                <!-- Generated dynamically -->
-            </div>
-
-            <!-- Content Split (Player + Live Chat) -->
-            <div class="flex flex-col lg:flex-row flex-1 overflow-hidden">
-                
-                <!-- Player Viewport Area -->
-                <div class="flex-1 bg-black flex flex-col justify-center items-center relative min-h-[260px] sm:min-h-[380px]">
-                    <div id="canvasPlayer" class="w-full h-full flex flex-col items-center justify-center relative bg-slate-950 overflow-hidden">
-                        
-                        <!-- Simulated Screen Content -->
-                        <div id="simulatedScreen" class="w-full h-full flex flex-col items-center justify-center p-6 text-center bg-gradient-to-br from-gray-900 via-slate-900 to-black relative">
-                            <div class="absolute top-3 left-3 flex items-center gap-2 bg-red-600/90 text-white text-[10px] font-bold px-2 py-0.5 rounded uppercase tracking-wider animate-pulse">
-                                <span class="w-2 h-2 bg-white rounded-full"></span> EN VIVO
-                            </div>
-                            <div class="absolute top-3 right-3 bg-black/60 text-emerald-400 border border-emerald-500/30 text-[10px] font-mono px-2 py-0.5 rounded">
-                                HD 1080p | 60 FPS
-                            </div>
-
-                            <i id="playStateIcon" class="fa-solid fa-play-circle text-6xl text-white/80 mb-3 cursor-pointer hover:scale-110 transition" onclick="togglePlay()"></i>
-                            <p id="channelNotice" class="text-sm font-semibold text-gray-200">Transmitiendo en vivo desde el servidor principal</p>
-                            <span id="channelSubNotice" class="text-xs text-gray-400 mt-1">Opción 1 - Servidor Principal HD</span>
-                        </div>
-
-                        <!-- Video Player Control Bar -->
-                        <div class="w-full bg-gray-900/90 border-t border-gray-800 p-2 flex items-center justify-between text-xs gap-3">
-                            <button onclick="togglePlay()" class="text-white hover:text-green-400 px-2 py-1">
-                                <i id="playBtnIcon" class="fa-solid fa-pause"></i>
-                            </button>
-                            
-                            <div class="flex items-center gap-2">
-                                <button onclick="toggleMute()" class="text-gray-300 hover:text-white">
-                                    <i id="muteIcon" class="fa-solid fa-volume-high"></i>
-                                </button>
-                                <input type="range" min="0" max="100" value="80" class="w-16 h-1 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-[#12823e]">
-                            </div>
-
-                            <div class="flex-1 text-center font-mono text-[11px] text-emerald-400 hidden sm:block">
-                                LIVE <span id="streamTimer">00:00:00</span>
-                            </div>
-
-                            <div class="flex items-center gap-2">
-                                <select class="bg-gray-800 border border-gray-700 text-gray-200 rounded px-1.5 py-0.5 text-[11px]">
-                                    <option>1080p HD</option>
-                                    <option>720p HD</option>
-                                    <option>480p SD</option>
-                                </select>
-                                <button onclick="toggleFullscreen()" class="text-gray-300 hover:text-white px-2 py-1">
-                                    <i class="fa-solid fa-expand"></i>
-                                </button>
-                            </div>
-                        </div>
-
-                    </div>
-                </div>
-
-                <!-- Live Chat Sidebar -->
-                <div class="w-full lg:w-80 bg-gray-900 border-t lg:border-t-0 lg:border-l border-gray-800 flex flex-col h-64 lg:h-auto">
-                    <div class="px-3 py-2 bg-gray-800 text-xs font-bold text-gray-300 border-b border-gray-700 flex justify-between items-center">
-                        <span><i class="fa-solid fa-[#12823e] fa-comments text-emerald-500 mr-1"></i> Chat en Vivo</span>
-                        <span class="text-[10px] text-gray-400 font-normal">2.418 usuarios</span>
-                    </div>
-
-                    <!-- Chat Messages List -->
-                    <div id="chatMessages" class="flex-1 p-3 overflow-y-auto space-y-2 text-xs font-sans">
-                        <!-- Simulated messages generated via JS -->
-                    </div>
-
-                    <!-- Send Message Input Form -->
-                    <form onsubmit="sendChatMessage(event)" class="p-2 border-t border-gray-800 flex gap-2">
-                        <input type="text" id="chatInput" placeholder="Escribe un comentario..." class="flex-1 bg-gray-800 text-white text-xs px-2.5 py-1.5 rounded border border-gray-700 focus:outline-none focus:border-[#12823e]">
-                        <button type="submit" class="bg-[#12823e] text-white px-3 py-1.5 rounded font-bold text-xs hover:bg-green-700">
-                            <i class="fa-solid fa-paper-plane"></i>
-                        </button>
-                    </form>
-                </div>
-
-            </div>
-        </div>
-    </div>
-
-    <!-- SCRIPTS -->
-    <script>
-        // MATCHES DATASET
-        const matchesData = [
-            { id: 1, time: '16:30', flag: '🇺🇸', title: "NCAA Women's Soccer: Vermont vs. Maine", category: 'otros', channels: ['ESPN 3', 'Disney+ HD'] },
-            { id: 2, time: '16:30', flag: '🇺🇸', title: "NCAA Women's Soccer: Western Michigan vs. Massachusetts", category: 'otros', channels: ['ESPN 4', 'Star+'] },
-            { id: 3, time: '16:45', flag: '🏴󠁧󠁢󠁥󠁮󠁧󠁿', title: "EFL Cup: Everton vs Newcastle United", category: 'futbol', channels: ['ESPN Premium', 'Star+ HD', 'Deportes TV'] },
-            { id: 4, time: '16:45', flag: '🇮🇹', title: "Serie A: Fiorentina vs Atalanta", category: 'futbol', channels: ['ESPN 2 HD', 'Star+'] },
-            { id: 5, time: '17:00', flag: '🇪🇺', title: "UEFA Women's Champions League: Køge vs Barcelona", category: 'futbol', channels: ['DAZN UEFA', 'YouTube LIVE'] },
-            { id: 6, time: '17:00', flag: '🇪🇺', title: "UEFA Women's Champions League: Manchester City vs PSG", category: 'futbol', channels: ['DAZN 2', 'ESPN Extra'] },
-            { id: 7, time: '17:30', flag: '🇵🇪', title: "Liga 1: Sporting Cristal vs Alianza Lima", category: 'futbol', channels: ['L1 MAX HD', 'GolPerú'] },
-            { id: 8, time: '17:45', flag: '🇵🇹', title: "Copa de la Liga: Benfica vs Gil Vicente", category: 'futbol', channels: ['RTP Internacional', 'Sport TV1'] },
-            { id: 9, time: '19:30', flag: '🇧🇷', title: "Brasileirão: Atlético Mineiro vs Cruzeiro", category: 'futbol', channels: ['Premiere HD', 'Globo Brasil'] },
-            { id: 10, time: '20:00', flag: '🇧🇷', title: "Brasileirão: Vasco da Gama vs Flamengo", category: 'futbol', channels: ['TNT Sports HD', 'Premiere FC'] },
-            { id: 11, time: '20:15', flag: '🇨🇴', title: "Primera A: América de Cali vs Fortaleza CEIF", category: 'futbol', channels: ['Win Sports+ HD', 'Win Sports Online'] },
-            { id: 12, time: '20:30', flag: '🇺🇾', title: "Copa Uruguay: Wanderers Durazno vs Danubio", category: 'futbol', channels: ['VTV Plus HD', 'AUFTV'] },
-            { id: 13, time: '20:30', flag: '⚽', title: "NHL – Detroit Red Wings vs. Chicago Blackhawks", category: 'otros', channels: ['ESPN 3 HD', 'Star+'] },
-            { id: 14, time: '21:00', flag: '🏈', title: "NFL – Green Bay Packers vs. Carolina Panthers", category: 'otros', channels: ['ESPN HD', 'NFL Game Pass'] },
-            { id: 15, time: '21:00', flag: '🇪🇨', title: "Copa Ecuador: Universidad Católica vs LDU Quito", category: 'futbol', channels: ['Teleamazonas HD', 'El Canal del Fútbol'] }
-        ];
-
-        let activeCategory = 'all';
-        let isPlaying = true;
-        let isMuted = false;
-        let timerSeconds = 0;
-        let timerInterval = null;
-
-        // INITIALIZE
-        window.onload = function() {
-            renderAgenda();
-            startStreamTimer();
-            initSimulatedChat();
-        };
-
-        // RENDER MATCH LIST
-        function renderAgenda() {
-            const listContainer = document.getElementById('agendaList');
-            const searchVal = document.getElementById('searchInput').value.toLowerCase();
-            listContainer.innerHTML = '';
-
-            const filtered = matchesData.filter(m => {
-                const matchCat = activeCategory === 'all' || 
-                                (activeCategory === 'canales') ||
-                                m.category === activeCategory;
-                const matchSearch = m.title.toLowerCase().includes(searchVal) || m.time.includes(searchVal);
-                return matchCat && matchSearch;
-            });
-
-            if (filtered.length === 0) {
-                listContainer.innerHTML = `
-                    <div class="px-4 py-8 text-center text-gray-500 text-sm">
-                        No se encontraron eventos disponibles con ese criterio de búsqueda.
-                    </div>`;
-                return;
-            }
-
-            filtered.forEach(m => {
-                const row = document.createElement('div');
-                row.className = "agenda-row flex items-center px-4 py-2.5 cursor-pointer border-b border-gray-100 last:border-0";
-                row.onclick = () => openModal(m);
-                row.innerHTML = `
-                    <span class="w-14 sm:w-16 font-bold text-gray-900 shrink-0">${m.time}</span>
-                    <span class="w-7 text-center shrink-0 mr-2 text-base">${m.flag}</span>
-                    <span class="truncate hover:text-[#0d7338] transition-colors">${m.title}</span>
-                `;
-                listContainer.appendChild(row);
-            });
-        }
-
-        // FILTER BUTTON ACTIONS
-        function filterCategory(cat) {
-            activeCategory = cat;
-            document.querySelectorAll('.cat-btn').forEach(btn => {
-                btn.className = "cat-btn px-3 py-1.5 text-xs sm:text-sm font-semibold rounded-md bg-gray-100 text-gray-700 hover:bg-gray-200";
-            });
-            const activeBtn = document.getElementById(`btn-${cat}`);
-            if (activeBtn) {
-                activeBtn.className = "cat-btn px-3 py-1.5 text-xs sm:text-sm font-semibold rounded-md bg-[#12823e] text-white shadow-sm";
-            }
-            renderAgenda();
-        }
-
-        function resetFilters() {
-            document.getElementById('searchInput').value = '';
-            filterCategory('all');
-        }
-
-        // DIRECT CHANNEL MODAL
-        function openChannelDirect(channelName, providerName) {
-            const dummyMatch = {
-                title: `${channelName} (Señal en Vivo 24/7)`,
-                flag: '📺',
-                channels: [`${providerName} Server 1 HD`, `${providerName} Server 2 FHD`, `Opción Móvil`]
-            };
-            openModal(dummyMatch);
-        }
-
-        // STREAM MODAL OPEN & CLOSE
-        function openModal(match) {
-            document.getElementById('modalTitle').textContent = match.title;
-            document.getElementById('modalFlag').textContent = match.flag;
-
-            const optionsContainer = document.getElementById('channelOptions');
-            optionsContainer.innerHTML = '';
-
-            match.channels.forEach((ch, index) => {
-                const btn = document.createElement('button');
-                btn.className = index === 0 
-                    ? "px-3 py-1 bg-[#12823e] text-white rounded font-bold shadow-sm" 
-                    : "px-3 py-1 bg-gray-700 hover:bg-gray-600 text-gray-200 rounded";
-                btn.textContent = `Opción ${index + 1}: ${ch}`;
-                btn.onclick = () => selectServerOption(btn, ch);
-                optionsContainer.appendChild(btn);
-            });
-
-            selectServerOption(optionsContainer.children[0], match.channels[0]);
-            document.getElementById('streamModal').classList.remove('hidden');
-            isPlaying = true;
-            updatePlayState();
-        }
-
-        function closeModal() {
-            document.getElementById('streamModal').classList.add('hidden');
-        }
-
-        function selectServerOption(btnElement, serverName) {
-            if (!btnElement) return;
-            const parent = btnElement.parentElement;
-            Array.from(parent.children).forEach(child => {
-                child.className = "px-3 py-1 bg-gray-700 hover:bg-gray-600 text-gray-200 rounded";
-            });
-            btnElement.className = "px-3 py-1 bg-[#12823e] text-white rounded font-bold shadow-sm";
-            
-            document.getElementById('channelNotice').textContent = `Transmitiendo señal en vivo`;
-            document.getElementById('channelSubNotice').textContent = `${serverName} - Conexión Estable (Latencia 0.2s)`;
-        }
-
-        // PLAYER CONTROLS SIMULATION
-        function togglePlay() {
-            isPlaying = !isPlaying;
-            updatePlayState();
-        }
-
-        function updatePlayState() {
-            const icon = document.getElementById('playBtnIcon');
-            const stateIcon = document.getElementById('playStateIcon');
-            if (isPlaying) {
-                icon.className = "fa-solid fa-pause";
-                stateIcon.className = "fa-solid fa-play-circle text-6xl text-white/80 mb-3 cursor-pointer hover:scale-110 transition hidden";
-            } else {
-                icon.className = "fa-solid fa-play";
-                stateIcon.className = "fa-solid fa-play-circle text-6xl text-white/80 mb-3 cursor-pointer hover:scale-110 transition block";
-            }
-        }
-
-        function toggleMute() {
-            isMuted = !isMuted;
-            const icon = document.getElementById('muteIcon');
-            icon.className = isMuted ? "fa-solid fa-volume-xmark text-red-400" : "fa-solid fa-volume-high";
-        }
-
-        function toggleFullscreen() {
-            const player = document.getElementById('canvasPlayer');
-            if (!document.fullscreenElement) {
-                player.requestFullscreen().catch(err => alert(`Error de pantalla completa: ${err.message}`));
-            } else {
-                document.exitFullscreen();
-            }
-        }
-
-        function startStreamTimer() {
-            setInterval(() => {
-                if (isPlaying) {
-                    timerSeconds++;
-                    const hrs = String(Math.floor(timerSeconds / 3600)).padStart(2, '0');
-                    const mins = String(Math.floor((timerSeconds % 3600) / 60)).padStart(2, '0');
-                    const secs = String(timerSeconds % 60).padStart(2, '0');
-                    const timerElem = document.getElementById('streamTimer');
-                    if (timerElem) timerElem.textContent = `${hrs}:${mins}:${secs}`;
-                }
-            }, 1000);
-        }
-
-        // SIMULATED CHAT LOGIC
-        const sampleUsers = ['Golazo99', 'SuperBoca', 'MeteGol', 'Futbolero_Arg', 'HinchaOficial', 'Charrua_20', 'PibeDeOro'];
-        const sampleMessages = [
-            '¡Tremendo partido!',
-            'Se ve perfecto en HD, gracias Fútbol Libre',
-            '¿Cuánto van?',
-            '¡Qué jugada por la banda!',
-            'Buena transmisión, sin trabas',
-            '¡Vamos con todo hoy!',
-            'Cámbienlo a la opción 2 que va más rápido'
-        ];
-
-        function initSimulatedChat() {
-            const chatBox = document.getElementById('chatMessages');
-            chatBox.innerHTML = '';
-            
-            // Initial seed messages
-            for (let i = 0; i < 4; i++) {
-                addChatMessage(sampleUsers[i], sampleMessages[i], false);
-            }
-
-            // Auto periodic new user messages
-            setInterval(() => {
-                if (!document.getElementById('streamModal').classList.contains('hidden')) {
-                    const randomUser = sampleUsers[Math.floor(Math.random() * sampleUsers.length)];
-                    const randomMsg = sampleMessages[Math.floor(Math.random() * sampleMessages.length)];
-                    addChatMessage(randomUser, randomMsg, false);
-                }
-            }, 4500);
-        }
-
-        function addChatMessage(user, text, isSelf) {
-            const chatBox = document.getElementById('chatMessages');
-            const msgDiv = document.createElement('div');
-            msgDiv.className = isSelf ? "bg-green-950/60 border-l-2 border-green-500 p-1.5 rounded text-xs" : "bg-gray-800/60 p-1.5 rounded text-xs";
-            msgDiv.innerHTML = `
-                <span class="${isSelf ? 'text-green-400 font-bold' : 'text-emerald-400 font-semibold'}">${user}:</span>
-                <span class="text-gray-200 ml-1">${text}</span>
-            `;
-            chatBox.appendChild(msgDiv);
-            chatBox.scrollTop = chatBox.scrollHeight;
-        }
-
-        function sendChatMessage(e) {
-            e.preventDefault();
-            const input = document.getElementById('chatInput');
-            const text = input.value.trim();
-            if (text) {
-                addChatMessage('Tú', text, true);
-                input.value = '';
-            }
-        }
-    </script>
-</body>
-</html>
+  <div class="header">
+    <h1>Fútbol Libre</h1>
+    <p><strong>Fútbol Libre</strong> organiza
