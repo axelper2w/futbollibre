@@ -14,19 +14,19 @@
     }
     .header {
       text-align: center;
-      padding: 20px 10px 10px;
+      padding: 25px 10px 15px;
     }
     .header h1 {
       color: #0d7338;
-      font-size: 2.2rem;
+      font-size: 2.5rem;
       margin: 0 0 15px;
     }
     .header p {
-      max-width: 900px;
-      margin: 0 auto 12px;
-      font-size: 0.95rem;
+      max-width: 950px;
+      margin: 0 auto 10px;
+      font-size: 0.92rem;
       line-height: 1.4;
-      color: #444;
+      color: #333;
     }
     .header p strong {
       color: #0d7338;
@@ -40,49 +40,53 @@
       background-color: #12823e;
       color: white;
       text-align: center;
-      padding: 8px 15px;
+      padding: 10px 15px;
       font-weight: bold;
-      border-top-left-radius: 8px;
-      border-top-right-radius: 8px;
+      border-top-left-radius: 6px;
+      border-top-right-radius: 6px;
       font-size: 1rem;
     }
     .match-row {
       display: flex;
       align-items: center;
-      padding: 10px 15px;
+      padding: 11px 15px;
       border-bottom: 1px solid #e0e0e0;
+      background-color: #ffffff;
       cursor: pointer;
-      transition: background-color 0.15s ease;
+      transition: background-color 0.1s ease;
     }
     .match-row:hover {
-      background-color: #f5f5f5;
+      background-color: #f2f2f2;
     }
     .match-time {
       font-weight: bold;
-      width: 60px;
+      width: 65px;
       flex-shrink: 0;
-      font-size: 0.9rem;
+      font-size: 0.95rem;
+      color: #222;
     }
     .match-icon {
-      width: 30px;
+      width: 35px;
       display: flex;
       justify-content: center;
       align-items: center;
-      margin-right: 10px;
+      margin-right: 12px;
       flex-shrink: 0;
     }
     .match-icon img {
-      width: 20px;
-      height: 15px;
+      width: 22px;
+      height: 16px;
       object-fit: cover;
+      border-radius: 2px;
     }
     .match-title {
       font-size: 0.95rem;
+      color: #222;
     }
     .match-title .tournament {
       font-weight: bold;
     }
-    /* Estilos del reproductor */
+    /* Estilos del reproductor modal */
     .player-modal {
       display: none;
       position: fixed;
@@ -137,4 +141,112 @@
 
   <div class="header">
     <h1>Fútbol Libre</h1>
-    <p><strong>Fútbol Libre</strong> organiza
+    <p><strong>Fútbol Libre</strong> organiza la agenda futbolística diaria con horarios, torneos y señales deportivas para consultar los principales partidos desde un solo lugar.</p>
+    <p>Encuentra información sobre el fútbol de <strong>Argentina</strong>, <strong>México</strong>, <strong>Ecuador</strong>, <strong>Chile</strong>, <strong>España</strong>, <strong>Uruguay</strong>, <strong>Bolivia</strong> y <strong>Perú</strong>, además de ligas internacionales y competiciones de clubes y selecciones.</p>
+    <p>En <strong>Fútbol Libre</strong> puedes revisar la hora de cada encuentro, la programación del día y los <strong>canales deportivos en calidad HD</strong> encargados de su cobertura.</p>
+  </div>
+
+  <div class="agenda-container">
+    <div class="agenda-header" id="agenda-date">Agenda - 29 de octubre de 2026</div>
+    <div id="matches-list">
+      <div style="padding: 25px; text-align: center; color: #666;">Cargando partidos desde Google Sheets...</div>
+    </div>
+  </div>
+
+  <!-- Modal del Reproductor -->
+  <div class="player-modal" id="playerModal">
+    <div class="player-content">
+      <div class="player-header">
+        <span id="playerTitle">Transmisión en vivo</span>
+        <button class="close-btn" onclick="closePlayer()">&times;</button>
+      </div>
+      <div class="iframe-wrapper">
+        <iframe id="videoIframe" src="" allowfullscreen></iframe>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Tu enlace CSV de Google Sheets
+    const SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTFVfoGnQnIeXulknqnB9L9qUsgGFcUH6wYyCZWWuoNp3hOHSfgmLFpAU6v0aHAoCzxra7-uronT5Cv/pub?output=csv';
+
+    async function cargarPartidos() {
+      try {
+        // Usamos un proxy público para evitar bloqueos de seguridad del navegador (CORS)
+        const proxyUrl = 'https://api.allorigins.win/raw?url=' + encodeURIComponent(SHEET_CSV_URL);
+        const respuesta = await fetch(proxyUrl);
+        const texto = await respuesta.text();
+        
+        const lineas = texto.split('\n').map(r => r.trim()).filter(r => r);
+
+        if (lineas.length <= 1) {
+          document.getElementById('matches-list').innerHTML = '<div style="padding: 20px; text-align: center;">No hay partidos cargados en la planilla.</div>';
+          return;
+        }
+
+        // Parsear filas del CSV omitiendo la cabecera (slice 1)
+        const partidos = lineas.slice(1).map(linea => {
+          const col = linea.split(',').map(c => c.replace(/^"|"$/g, '').trim());
+          return {
+            hora: col[0] || '',
+            pais: col[1] || 'ar',
+            torneo: col[2] || '',
+            partido: col[3] || '',
+            streamUrl: col[4] || ''
+          };
+        });
+
+        renderAgenda(partidos);
+      } catch (error) {
+        console.error("Error cargando la planilla:", error);
+        document.getElementById('matches-list').innerHTML = `
+          <div style="padding: 20px; text-align: center; color: #d9534f;">
+            No se pudo conectar con Google Sheets. Asegúrate de que esté publicada en la web como CSV.
+          </div>`;
+      }
+    }
+
+    function renderAgenda(partidos) {
+      const container = document.getElementById('matches-list');
+      
+      container.innerHTML = partidos.map(m => {
+        let finalUrl = m.streamUrl;
+        if (finalUrl.includes('youtube.com/watch?v=')) {
+          finalUrl = finalUrl.replace('watch?v=', 'embed/');
+        } else if (finalUrl.includes('youtu.be/')) {
+          finalUrl = finalUrl.replace('youtu.be/', 'youtube.com/embed/');
+        }
+
+        return `
+          <div class="match-row" onclick="playMatch('${m.partido.replace(/'/g, "\\'")}', '${finalUrl}')">
+            <div class="match-time">${m.hora}</div>
+            <div class="match-icon">
+              <img src="https://flagcdn.com/24x18/${m.pais.toLowerCase()}.png" alt="${m.pais}" onerror="this.src='https://cdn-icons-png.flaticon.com/512/53/53283.png'">
+            </div>
+            <div class="match-title">
+              <span class="tournament">${m.torneo}:</span> ${m.partido}
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function playMatch(title, url) {
+      if (!url) {
+        alert("Este partido aún no tiene enlace de transmisión asignado en la planilla.");
+        return;
+      }
+      document.getElementById('playerTitle').textContent = title;
+      document.getElementById('videoIframe').src = url;
+      document.getElementById('playerModal').style.display = 'flex';
+    }
+
+    function closePlayer() {
+      document.getElementById('playerModal').style.display = 'none';
+      document.getElementById('videoIframe').src = '';
+    }
+
+    document.addEventListener('DOMContentLoaded', cargarPartidos);
+  </script>
+</body>
+</html>
