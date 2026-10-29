@@ -86,7 +86,6 @@
     .match-title .tournament {
       font-weight: bold;
     }
-    /* Estilos del reproductor modal */
     .player-modal {
       display: none;
       position: fixed;
@@ -149,11 +148,10 @@
   <div class="agenda-container">
     <div class="agenda-header" id="agenda-date">Agenda - 29 de octubre de 2026</div>
     <div id="matches-list">
-      <div style="padding: 25px; text-align: center; color: #666;">Cargando partidos desde Google Sheets...</div>
+      <div style="padding: 25px; text-align: center; color: #666;">Cargando partidos...</div>
     </div>
   </div>
 
-  <!-- Modal del Reproductor -->
   <div class="player-modal" id="playerModal">
     <div class="player-content">
       <div class="player-header">
@@ -167,43 +165,57 @@
   </div>
 
   <script>
-    // Tu enlace CSV de Google Sheets
     const SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTFVfoGnQnIeXulknqnB9L9qUsgGFcUH6wYyCZWWuoNp3hOHSfgmLFpAU6v0aHAoCzxra7-uronT5Cv/pub?output=csv';
 
     async function cargarPartidos() {
-      try {
-        // Usamos un proxy público para evitar bloqueos de seguridad del navegador (CORS)
-        const proxyUrl = 'https://api.allorigins.win/raw?url=' + encodeURIComponent(SHEET_CSV_URL);
-        const respuesta = await fetch(proxyUrl);
-        const texto = await respuesta.text();
-        
-        const lineas = texto.split('\n').map(r => r.trim()).filter(r => r);
+      // Lista de métodos para consultar el CSV sin que el navegador bloquee por CORS
+      const urls = [
+        SHEET_CSV_URL,
+        'https://api.allorigins.win/raw?url=' + encodeURIComponent(SHEET_CSV_URL),
+        'https://corsproxy.io/?' + encodeURIComponent(SHEET_CSV_URL)
+      ];
 
-        if (lineas.length <= 1) {
-          document.getElementById('matches-list').innerHTML = '<div style="padding: 20px; text-align: center;">No hay partidos cargados en la planilla.</div>';
-          return;
+      let texto = null;
+
+      for (let url of urls) {
+        try {
+          const res = await fetch(url);
+          if (res.ok) {
+            texto = await res.text();
+            if (texto && texto.includes(',')) break;
+          }
+        } catch (e) {
+          console.warn("Intento fallido con URL:", url);
         }
-
-        // Parsear filas del CSV omitiendo la cabecera (slice 1)
-        const partidos = lineas.slice(1).map(linea => {
-          const col = linea.split(',').map(c => c.replace(/^"|"$/g, '').trim());
-          return {
-            hora: col[0] || '',
-            pais: col[1] || 'ar',
-            torneo: col[2] || '',
-            partido: col[3] || '',
-            streamUrl: col[4] || ''
-          };
-        });
-
-        renderAgenda(partidos);
-      } catch (error) {
-        console.error("Error cargando la planilla:", error);
-        document.getElementById('matches-list').innerHTML = `
-          <div style="padding: 20px; text-align: center; color: #d9534f;">
-            No se pudo conectar con Google Sheets. Asegúrate de que esté publicada en la web como CSV.
-          </div>`;
       }
+
+      if (!texto) {
+        document.getElementById('matches-list').innerHTML = `
+          <div style="padding: 20px; text-align: center; color: red;">
+            No se pudo leer la planilla. Revisa que tenga datos cargados.
+          </div>`;
+        return;
+      }
+
+      const lineas = texto.split('\n').map(r => r.trim()).filter(r => r);
+
+      if (lineas.length <= 1) {
+        document.getElementById('matches-list').innerHTML = '<div style="padding: 20px; text-align: center;">No hay partidos cargados en la planilla.</div>';
+        return;
+      }
+
+      const partidos = lineas.slice(1).map(linea => {
+        const col = linea.split(',').map(c => c.replace(/^"|"$/g, '').trim());
+        return {
+          hora: col[0] || '',
+          pais: col[1] || 'ar',
+          torneo: col[2] || '',
+          partido: col[3] || '',
+          streamUrl: col[4] || ''
+        };
+      });
+
+      renderAgenda(partidos);
     }
 
     function renderAgenda(partidos) {
@@ -233,7 +245,7 @@
 
     function playMatch(title, url) {
       if (!url) {
-        alert("Este partido aún no tiene enlace de transmisión asignado en la planilla.");
+        alert("Este partido aún no tiene enlace de transmisión en la planilla.");
         return;
       }
       document.getElementById('playerTitle').textContent = title;
