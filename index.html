@@ -75,8 +75,8 @@
     }
     .match-icon img {
       width: 22px;
-      height: 16px;
-      object-fit: cover;
+      height: 18px;
+      object-fit: contain;
       border-radius: 2px;
     }
     .match-title {
@@ -146,7 +146,7 @@
   </div>
 
   <div class="agenda-container">
-    <div class="agenda-header" id="agenda-date">Agenda - 29 de octubre de 2026</div>
+    <div class="agenda-header" id="agenda-date">Agenda de Partidos</div>
     <div id="matches-list">
       <div style="padding: 25px; text-align: center; color: #666;">Cargando partidos...</div>
     </div>
@@ -168,7 +168,6 @@
     const SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTFVfoGnQnIeXulknqnB9L9qUsgGFcUH6wYyCZWWuoNp3hOHSfgmLFpAU6v0aHAoCzxra7-uronT5Cv/pub?output=csv';
 
     async function cargarPartidos() {
-      // Lista de métodos para consultar el CSV sin que el navegador bloquee por CORS
       const urls = [
         SHEET_CSV_URL,
         'https://api.allorigins.win/raw?url=' + encodeURIComponent(SHEET_CSV_URL),
@@ -176,7 +175,6 @@
       ];
 
       let texto = null;
-
       for (let url of urls) {
         try {
           const res = await fetch(url);
@@ -184,23 +182,17 @@
             texto = await res.text();
             if (texto && texto.includes(',')) break;
           }
-        } catch (e) {
-          console.warn("Intento fallido con URL:", url);
-        }
+        } catch (e) {}
       }
 
       if (!texto) {
-        document.getElementById('matches-list').innerHTML = `
-          <div style="padding: 20px; text-align: center; color: red;">
-            No se pudo leer la planilla. Revisa que tenga datos cargados.
-          </div>`;
+        document.getElementById('matches-list').innerHTML = '<div style="padding: 20px; text-align: center; color: red;">No se pudo leer la planilla.</div>';
         return;
       }
 
       const lineas = texto.split('\n').map(r => r.trim()).filter(r => r);
-
       if (lineas.length <= 1) {
-        document.getElementById('matches-list').innerHTML = '<div style="padding: 20px; text-align: center;">No hay partidos cargados en la planilla.</div>';
+        document.getElementById('matches-list').innerHTML = '<div style="padding: 20px; text-align: center;">No hay partidos cargados.</div>';
         return;
       }
 
@@ -229,12 +221,28 @@
           finalUrl = finalUrl.replace('youtu.be/', 'youtube.com/embed/');
         }
 
+        // Detectar si es NBA / Básquet o un país
+        let iconHtml = '';
+        let valorPais = m.pais.toLowerCase().trim();
+
+        if (valorPais === 'nba' || valorPais === 'basquet' || valorPais === 'basketball') {
+          // Ícono de básquetbol
+          iconHtml = `<img src="https://cdn-icons-png.flaticon.com/512/889/889455.png" alt="NBA">`;
+        } else {
+          // Convertir nombres comunes a códigos de bandera de 2 letras
+          let countryCode = valorPais;
+          if (valorPais === 'arg' || valorPais === 'argentina') countryCode = 'ar';
+          if (valorPais === 'usa' || valorPais === 'eeuu' || valorPais === 'estados unidos') countryCode = 'us';
+          if (valorPais === 'bra' || valorPais === 'brasil') countryCode = 'br';
+          if (valorPais === 'esp' || valorPais === 'españa') countryCode = 'es';
+
+          iconHtml = `<img src="https://flagcdn.com/24x18/${countryCode}.png" alt="${valorPais}" onerror="this.src='https://cdn-icons-png.flaticon.com/512/53/53283.png'">`;
+        }
+
         return `
           <div class="match-row" onclick="playMatch('${m.partido.replace(/'/g, "\\'")}', '${finalUrl}')">
             <div class="match-time">${m.hora}</div>
-            <div class="match-icon">
-              <img src="https://flagcdn.com/24x18/${m.pais.toLowerCase()}.png" alt="${m.pais}" onerror="this.src='https://cdn-icons-png.flaticon.com/512/53/53283.png'">
-            </div>
+            <div class="match-icon">${iconHtml}</div>
             <div class="match-title">
               <span class="tournament">${m.torneo}:</span> ${m.partido}
             </div>
@@ -245,7 +253,7 @@
 
     function playMatch(title, url) {
       if (!url) {
-        alert("Este partido aún no tiene enlace de transmisión en la planilla.");
+        alert("Este partido aún no tiene enlace de transmisión asignado.");
         return;
       }
       document.getElementById('playerTitle').textContent = title;
