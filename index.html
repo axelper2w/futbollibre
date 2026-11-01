@@ -5,144 +5,33 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Fútbol Libre</title>
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      margin: 0;
-      padding: 0;
-      background-color: #ffffff;
-      color: #333333;
-    }
-    .header {
-      text-align: center;
-      padding: 25px 10px 15px;
-    }
-    .header h1 {
-      color: #0d7338;
-      font-size: 2.5rem;
-      margin: 0 0 15px;
-    }
-    .header p {
-      max-width: 950px;
-      margin: 0 auto 10px;
-      font-size: 0.92rem;
-      line-height: 1.4;
-      color: #333;
-    }
-    .header p strong {
-      color: #0d7338;
-    }
-    .agenda-container {
-      max-width: 950px;
-      margin: 20px auto;
-      padding: 0 10px;
-    }
-    .agenda-header {
-      background-color: #12823e;
-      color: white;
-      text-align: center;
-      padding: 10px 15px;
-      font-weight: bold;
-      border-top-left-radius: 6px;
-      border-top-right-radius: 6px;
-      font-size: 1rem;
-    }
-    .match-row {
-      display: flex;
-      align-items: center;
-      padding: 11px 15px;
-      border-bottom: 1px solid #e0e0e0;
-      background-color: #ffffff;
-      cursor: pointer;
-      transition: background-color 0.1s ease;
-    }
-    .match-row:hover {
-      background-color: #f2f2f2;
-    }
-    .match-time {
-      font-weight: bold;
-      width: 65px;
-      flex-shrink: 0;
-      font-size: 0.95rem;
-      color: #222;
-    }
-    .match-icon {
-      width: 35px;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      margin-right: 12px;
-      flex-shrink: 0;
-    }
-    .match-icon img {
-      width: 22px;
-      height: 18px;
-      object-fit: contain;
-      border-radius: 2px;
-    }
-    .match-title {
-      font-size: 0.95rem;
-      color: #222;
-    }
-    .match-title .tournament {
-      font-weight: bold;
-    }
-    .player-modal {
-      display: none;
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(0,0,0,0.85);
-      z-index: 1000;
-      justify-content: center;
-      align-items: center;
-    }
-    .player-content {
-      background: #111;
-      width: 90%;
-      max-width: 800px;
-      border-radius: 8px;
-      overflow: hidden;
-      box-shadow: 0 0 20px rgba(0,0,0,0.5);
-    }
-    .player-header {
-      background: #12823e;
-      color: white;
-      padding: 10px 15px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-    .close-btn {
-      background: none;
-      border: none;
-      color: white;
-      font-size: 1.5rem;
-      cursor: pointer;
-    }
-    .iframe-wrapper {
-      position: relative;
-      padding-bottom: 56.25%;
-      height: 0;
-    }
-    .iframe-wrapper iframe {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      border: 0;
-    }
+    body { font-family: Arial, sans-serif; margin: 0; padding: 0; background-color: #ffffff; color: #333333; }
+    .header { text-align: center; padding: 25px 10px 15px; }
+    .header h1 { color: #0d7338; font-size: 2.5rem; margin: 0 0 15px; }
+    .header p { max-width: 950px; margin: 0 auto 10px; font-size: 0.92rem; line-height: 1.4; color: #333; }
+    .header p strong { color: #0d7338; }
+    .agenda-container { max-width: 950px; margin: 20px auto; padding: 0 10px; }
+    .agenda-header { background-color: #12823e; color: white; text-align: center; padding: 10px 15px; font-weight: bold; border-top-left-radius: 6px; border-top-right-radius: 6px; font-size: 1rem; }
+    .match-row { display: flex; align-items: center; padding: 11px 15px; border-bottom: 1px solid #e0e0e0; background-color: #ffffff; cursor: pointer; transition: background-color 0.1s ease; }
+    .match-row:hover { background-color: #f2f2f2; }
+    .match-time { font-weight: bold; width: 65px; flex-shrink: 0; font-size: 0.95rem; color: #222; }
+    .match-icon { width: 35px; display: flex; justify-content: center; align-items: center; margin-right: 12px; flex-shrink: 0; }
+    .match-icon img { width: 22px; height: 18px; object-fit: contain; border-radius: 2px; }
+    .match-title { font-size: 0.95rem; color: #222; }
+    .match-title .tournament { font-weight: bold; }
+    .player-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 1000; justify-content: center; align-items: center; }
+    .player-content { background: #111; width: 90%; max-width: 800px; border-radius: 8px; overflow: hidden; box-shadow: 0 0 20px rgba(0,0,0,0.5); }
+    .player-header { background: #12823e; color: white; padding: 10px 15px; display: flex; justify-content: space-between; align-items: center; }
+    .close-btn { background: none; border: none; color: white; font-size: 1.5rem; cursor: pointer; }
+    .iframe-wrapper { position: relative; padding-bottom: 56.25%; height: 0; }
+    .iframe-wrapper iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0; }
   </style>
 </head>
 <body>
 
   <div class="header">
     <h1>Fútbol Libre</h1>
-    <p><strong>Fútbol Libre</strong> organiza la agenda futbolística diaria con horarios, torneos y señales deportivas para consultar los principales partidos desde un solo lugar.</p>
-    <p>Encuentra información sobre el fútbol de <strong>Argentina</strong>, <strong>México</strong>, <strong>Ecuador</strong>, <strong>Chile</strong>, <strong>España</strong>, <strong>Uruguay</strong>, <strong>Bolivia</strong> y <strong>Perú</strong>, además de ligas internacionales y competiciones de clubes y selecciones.</p>
-    <p>En <strong>Fútbol Libre</strong> puedes revisar la hora de cada encuentro, la programación del día y los <strong>canales deportivos en calidad HD</strong> encargados de su cobertura.</p>
+    <p><strong>Fútbol Libre</strong> organiza la agenda futbolística diaria con horarios, torneos y señales deportivas.</p>
   </div>
 
   <div class="agenda-container">
@@ -169,52 +58,43 @@
 
     async function cargarPartidos() {
       try {
-        // Usamos un proxy alternativo súper rápido y directo para evitar bloqueos CORS
-        const proxyUrl = 'https://api.allorigins.win/get?url=' + encodeURIComponent(SHEET_CSV_URL);
+        const proxyUrl = 'https://api.allorigins.win/get?url=' + encodeURIComponent(SHEET_CSV_URL + '&t=' + Date.now());
         const res = await fetch(proxyUrl);
-        
-        if (!res.ok) throw new Error('Error de red');
-        
         const data = await res.json();
         const texto = data.contents;
 
-        if (!texto || !texto.includes(',')) {
-          throw new Error('Formato inválido');
-        }
+        if (!texto) throw new Error('Contenido vacío');
 
         const lineas = texto.split('\n').map(r => r.trim()).filter(r => r);
-        if (lineas.length <= 1) {
+
+        const partidos = [];
+        for (let i = 0; i < lineas.length; i++) {
+          // Filtrar valores vacíos producidos por la columna A en blanco
+          const col = lineas[i].split(',').map(c => c.replace(/^"|"$/g, '').trim()).filter(c => c !== '');
+          
+          if (col.length >= 3) {
+            let hora = col[0] || '';
+            let pais = col[1] || 'ar';
+            let torneo = col[2] || '';
+            let partido = col[3] || '';
+            let streamUrl = col[4] || '';
+
+            // Omitir fila de encabezados (hora, pais, etc.)
+            if (hora.toLowerCase() !== 'hora' && partido.toLowerCase() !== 'partido') {
+              partidos.push({ hora, pais, torneo, partido, streamUrl });
+            }
+          }
+        }
+
+        if (partidos.length === 0) {
           document.getElementById('matches-list').innerHTML = '<div style="padding: 20px; text-align: center;">No hay partidos cargados en la planilla.</div>';
           return;
         }
 
-        const partidos = lineas.slice(1).map(linea => {
-          const col = linea.split(',').map(c => c.replace(/^"|"$/g, '').trim());
-          return {
-            hora: col[0] || '',
-            pais: col[1] || 'ar',
-            torneo: col[2] || '',
-            partido: col[3] || '',
-            streamUrl: col[4] || ''
-          };
-        });
-
         renderAgenda(partidos);
 
       } catch (e) {
-        // Plan B: Si falla el proxy, intentamos lectura directa por si acaso
-        try {
-          const resDirect = await fetch(SHEET_CSV_URL);
-          const textoDirect = await resDirect.text();
-          const lineas = textoDirect.split('\n').map(r => r.trim()).filter(r => r);
-          const partidos = lineas.slice(1).map(linea => {
-            const col = linea.split(',').map(c => c.replace(/^"|"$/g, '').trim());
-            return { hora: col[0]||'', pais: col[1]||'ar', torneo: col[2]||'', partido: col[3]||'', streamUrl: col[4]||'' };
-          });
-          renderAgenda(partidos);
-        } catch (err) {
-          document.getElementById('matches-list').innerHTML = '<div style="padding: 20px; text-align: center; color: red;">No se pudo conectar con la hoja de cálculo. Verifica que esté publicada en la web como CSV.</div>';
-        }
+        document.getElementById('matches-list').innerHTML = '<div style="padding: 20px; text-align: center; color: red;">Error al conectar con la hoja de cálculo.</div>';
       }
     }
 
@@ -229,20 +109,10 @@
           finalUrl = finalUrl.replace('youtu.be/', 'youtube.com/embed/');
         }
 
-        let iconHtml = '';
-        let valorPais = m.pais.toLowerCase().trim();
+        let countryCode = m.pais.toLowerCase().trim();
+        if (countryCode === 'arg') countryCode = 'ar';
 
-        if (valorPais === 'nba' || valorPais === 'basquet' || valorPais === 'basketball') {
-          iconHtml = `<img src="https://cdn-icons-png.flaticon.com/512/889/889455.png" alt="NBA">`;
-        } else {
-          let countryCode = valorPais;
-          if (valorPais === 'arg' || valorPais === 'argentina') countryCode = 'ar';
-          if (valorPais === 'usa' || valorPais === 'eeuu' || valorPais === 'estados unidos') countryCode = 'us';
-          if (valorPais === 'bra' || valorPais === 'brasil') countryCode = 'br';
-          if (valorPais === 'esp' || valorPais === 'españa') countryCode = 'es';
-
-          iconHtml = `<img src="https://flagcdn.com/24x18/${countryCode}.png" alt="${valorPais}" onerror="this.src='https://cdn-icons-png.flaticon.com/512/53/53283.png'">`;
-        }
+        const iconHtml = `<img src="https://flagcdn.com/24x18/${countryCode}.png" alt="${countryCode}" onerror="this.src='https://cdn-icons-png.flaticon.com/512/53/53283.png'">`;
 
         return `
           <div class="match-row" onclick="playMatch('${m.partido.replace(/'/g, "\\'")}', '${finalUrl}')">
