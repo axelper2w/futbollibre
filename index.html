@@ -4,6 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Fútbol Libre</title>
+  <!-- Librería Hls.js para procesar los flujos de video directos -->
+  <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
   <style>
     body { font-family: Arial, sans-serif; margin: 0; padding: 0; background-color: #ffffff; color: #333333; }
     .header { text-align: center; padding: 25px 10px 15px; }
@@ -23,8 +25,8 @@
     .player-content { background: #111; width: 90%; max-width: 800px; border-radius: 8px; overflow: hidden; box-shadow: 0 0 20px rgba(0,0,0,0.5); }
     .player-header { background: #12823e; color: white; padding: 10px 15px; display: flex; justify-content: space-between; align-items: center; }
     .close-btn { background: none; border: none; color: white; font-size: 1.5rem; cursor: pointer; }
-    .iframe-wrapper { position: relative; padding-bottom: 56.25%; height: 0; }
-    .iframe-wrapper iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0; }
+    .media-container { position: relative; padding-bottom: 56.25%; height: 0; background: #000; }
+    .media-container iframe, .media-container video { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0; }
   </style>
 </head>
 <body>
@@ -45,18 +47,17 @@
         <span id="playerTitle">Transmisión en vivo</span>
         <button class="close-btn" onclick="closePlayer()">&times;</button>
       </div>
-      <div class="iframe-wrapper">
-        <iframe id="videoIframe" src="" allowfullscreen></iframe>
+      <div class="media-container" id="mediaBox">
+        <!-- Se adapta automáticamente entre iframe o reproductor de video HLS -->
       </div>
     </div>
   </div>
 
   <script>
-    // Tus partidos cargados directamente aquí (sin errores de red ni bloqueos)
     const partidos = [
-     { hora: "18:30", pais: "EC", torneo: "Serie A", partido: "Macará vs Barcelona", streamUrl: "" },
+      { hora: "18:30", pais: "EC", torneo: "Serie A", partido: "Macará vs Barcelona", streamUrl: "" },
       { hora: "19:00", pais: "UY", torneo: "Segunda División", partido: "Rentistas vs La Luz", streamUrl: "" },
-      { hora: "19:15", pais: "AR", torneo: "Liga Profesional", partido: "Vélez Sarsfield vs San Lorenzo", streamUrl:"http://45.184.109.10/live/69393EAE6ADBC65A68F942022362A202/86.m3u8"},
+      { hora: "19:15", pais: "AR", torneo: "Liga Profesional", partido: "Vélez Sarsfield vs San Lorenzo", streamUrl: "http://45.184.109.10/live/69393EAE6ADBC65A68F942022362A202/86.m3u8" },
       { hora: "20:00", pais: "CO", torneo: "Primera A", partido: "Llaneros vs Junior", streamUrl: "http://45.184.109.11/auth/FtuiWwnbNhiXJZ69UNdAr_gbnd54pu_iNFzUUR49oNKt9Ur9xoXAvkk1iuvwkR-kWCQ0xIRWeF5atblIoUo5LIOvIOYLKNFzd6z2AWa5qA_4RypQYjEZ3i8toFi2Pi9VtUcgMWzbIsZw3CMqAB4gFx9iT_rxDqoLsNSxUtdNgGVXRsLqDMr9fLWBVhZF60S7C0KF8G1UsvzKVk7LejzABPWaz8PCLzVcy3j_xG8rKDzHf6lQJwisqUwfNnJwye1Sg_S8VS-R26OOESD4Q2veGd-ncV9OWsNofA08nvAKAg5fnROTnToogeTMG912I0GWyO0Pg71JbNsToasSb1nTshabNcvOUj_zUGhKMDemgMkkVzqtwsxmO1i-pjyt_T_yPsg3OXzamQVwFUEP5GnxN7ETgql-7MGFN2SM0hZ10GWY_NiY4E8pY1qhKE8ioMYKpOpMtg6hpuz77FYvfwe4Zo0mHM3KIOfzNEyauPJfntrOgSO1UvsLhpcN_hkQQHtUApxt8-yLgIvgdE7nypqJj0J_hoTVKvULqoNaCEJVol1Gpn54R3Mhd9jiJ5f3ldDIc19jp1l7zpv-TmullYRpPl14_7iTwDUnXYIcS9I5bD_bi5Xs8PvDL83m1z32D9iq" },
       { hora: "20:00", pais: "MX", torneo: "Liga MX", partido: "Pachuca vs Tigres UANL", streamUrl: "" },
       { hora: "21:30", pais: "AR", torneo: "Liga Profesional", partido: "Estudiantes vs Instituto", streamUrl: "" },
@@ -65,6 +66,8 @@
       { hora: "00:10", pais: "MX", torneo: "Liga MX", partido: "América vs Toluca", streamUrl: "" },
       { hora: "00:10", pais: "MX", torneo: "Liga MX Femenil", partido: "Necaxa vs Santos Laguna", streamUrl: "" }
     ];
+
+    let hlsInstance = null;
 
     function renderAgenda(data) {
       const container = document.getElementById('matches-list');
@@ -75,18 +78,11 @@
       }
 
       container.innerHTML = data.map(m => {
-        let finalUrl = m.streamUrl;
-        if (finalUrl.includes('youtube.com/watch?v=')) {
-          finalUrl = finalUrl.replace('watch?v=', 'embed/');
-        } else if (finalUrl.includes('youtu.be/')) {
-          finalUrl = finalUrl.replace('youtu.be/', 'youtube.com/embed/');
-        }
-
         let countryCode = m.pais.toLowerCase().trim();
         const iconHtml = `<img src="https://flagcdn.com/24x18/${countryCode}.png" alt="${countryCode}" onerror="this.src='https://cdn-icons-png.flaticon.com/512/53/53283.png'">`;
 
         return `
-          <div class="match-row" onclick="playMatch('${m.partido.replace(/'/g, "\\'")}', '${finalUrl}')">
+          <div class="match-row" onclick="playMatch('${m.partido.replace(/'/g, "\\'")}', '${m.streamUrl}')">
             <div class="match-time">${m.hora}</div>
             <div class="match-icon">${iconHtml}</div>
             <div class="match-title">
@@ -102,14 +98,53 @@
         alert("Este partido aún no tiene enlace de transmisión asignado.");
         return;
       }
+      
       document.getElementById('playerTitle').textContent = title;
-      document.getElementById('videoIframe').src = url;
+      const mediaBox = document.getElementById('mediaBox');
+      mediaBox.innerHTML = '';
+
+      // Si es un embed de YouTube o iframe clásico
+      if (url.includes('embed') || url.includes('youtube.com') || (url.startsWith('http') && !url.includes('.m3u8') && !url.includes('.ts'))) {
+        let finalUrl = url;
+        if (finalUrl.includes('youtube.com/watch?v=')) {
+          finalUrl = finalUrl.replace('watch?v=', 'embed/');
+        } else if (finalUrl.includes('youtu.be/')) {
+          finalUrl = finalUrl.replace('youtu.be/', 'youtube.com/embed/');
+        }
+        mediaBox.innerHTML = `<iframe src="${finalUrl}" allowfullscreen></iframe>`;
+      } 
+      // Si es un enlace directo de transmisión (.m3u8 / IP stream)
+      else {
+        mediaBox.innerHTML = `<video id="videoPlayer" controls autoplay style="width:100%; height:100%;"></video>`;
+        const video = document.getElementById('videoPlayer');
+
+        if (Hls.isSupported()) {
+          if (hlsInstance) hlsInstance.destroy();
+          hlsInstance = new Hls();
+          hlsInstance.loadSource(url);
+          hlsInstance.attachMedia(video);
+          hlsInstance.on(Hls.Events.MANIFEST_PARSED, function() {
+            video.play();
+          });
+        } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+          video.src = url;
+          video.play();
+        } else {
+          video.src = url;
+        }
+      }
+
       document.getElementById('playerModal').style.display = 'flex';
     }
 
     function closePlayer() {
+      const mediaBox = document.getElementById('mediaBox');
+      mediaBox.innerHTML = '';
+      if (hlsInstance) {
+        hlsInstance.destroy();
+        hlsInstance = null;
+      }
       document.getElementById('playerModal').style.display = 'none';
-      document.getElementById('videoIframe').src = '';
     }
 
     document.addEventListener('DOMContentLoaded', () => renderAgenda(partidos));
