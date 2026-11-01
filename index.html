@@ -36,9 +36,7 @@
 
   <div class="agenda-container">
     <div class="agenda-header" id="agenda-date">Agenda de Partidos</div>
-    <div id="matches-list">
-      <div style="padding: 25px; text-align: center; color: #666;">Cargando partidos...</div>
-    </div>
+    <div id="matches-list"></div>
   </div>
 
   <div class="player-modal" id="playerModal">
@@ -54,54 +52,21 @@
   </div>
 
   <script>
-    const SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTFVfoGnQnIeXulknqnB9L9qUsgGFcUH6wYyCZWWuoNp3hOHSfgmLFpAU6v0aHAoCzxra7-uronT5Cv/pub?output=csv';
+    // Tus partidos cargados directamente aquí (sin errores de red ni bloqueos)
+    const partidos = [
+      { hora: "21:15", pais: "AR", torneo: "LPF PLAY", partido: "FERRO VS CHACA", streamUrl: "https://www.youtube.com/embed/5qap5aO4i9A" },
+      { hora: "22:30", pais: "AR", torneo: "LPF PLAY", partido: "CHICAG VS", streamUrl: "" }
+    ];
 
-    async function cargarPartidos() {
-      try {
-        const proxyUrl = 'https://api.allorigins.win/get?url=' + encodeURIComponent(SHEET_CSV_URL + '&t=' + Date.now());
-        const res = await fetch(proxyUrl);
-        const data = await res.json();
-        const texto = data.contents;
-
-        if (!texto) throw new Error('Contenido vacío');
-
-        const lineas = texto.split('\n').map(r => r.trim()).filter(r => r);
-
-        const partidos = [];
-        for (let i = 0; i < lineas.length; i++) {
-          // Filtrar valores vacíos producidos por la columna A en blanco
-          const col = lineas[i].split(',').map(c => c.replace(/^"|"$/g, '').trim()).filter(c => c !== '');
-          
-          if (col.length >= 3) {
-            let hora = col[0] || '';
-            let pais = col[1] || 'ar';
-            let torneo = col[2] || '';
-            let partido = col[3] || '';
-            let streamUrl = col[4] || '';
-
-            // Omitir fila de encabezados (hora, pais, etc.)
-            if (hora.toLowerCase() !== 'hora' && partido.toLowerCase() !== 'partido') {
-              partidos.push({ hora, pais, torneo, partido, streamUrl });
-            }
-          }
-        }
-
-        if (partidos.length === 0) {
-          document.getElementById('matches-list').innerHTML = '<div style="padding: 20px; text-align: center;">No hay partidos cargados en la planilla.</div>';
-          return;
-        }
-
-        renderAgenda(partidos);
-
-      } catch (e) {
-        document.getElementById('matches-list').innerHTML = '<div style="padding: 20px; text-align: center; color: red;">Error al conectar con la hoja de cálculo.</div>';
-      }
-    }
-
-    function renderAgenda(partidos) {
+    function renderAgenda(data) {
       const container = document.getElementById('matches-list');
       
-      container.innerHTML = partidos.map(m => {
+      if(data.length === 0) {
+        container.innerHTML = '<div style="padding: 25px; text-align: center; color: #666;">No hay partidos cargados.</div>';
+        return;
+      }
+
+      container.innerHTML = data.map(m => {
         let finalUrl = m.streamUrl;
         if (finalUrl.includes('youtube.com/watch?v=')) {
           finalUrl = finalUrl.replace('watch?v=', 'embed/');
@@ -110,8 +75,6 @@
         }
 
         let countryCode = m.pais.toLowerCase().trim();
-        if (countryCode === 'arg') countryCode = 'ar';
-
         const iconHtml = `<img src="https://flagcdn.com/24x18/${countryCode}.png" alt="${countryCode}" onerror="this.src='https://cdn-icons-png.flaticon.com/512/53/53283.png'">`;
 
         return `
@@ -141,7 +104,7 @@
       document.getElementById('videoIframe').src = '';
     }
 
-    document.addEventListener('DOMContentLoaded', cargarPartidos);
+    document.addEventListener('DOMContentLoaded', () => renderAgenda(partidos));
   </script>
 </body>
 </html>
