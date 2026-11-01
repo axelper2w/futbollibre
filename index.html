@@ -168,46 +168,54 @@
     const SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTFVfoGnQnIeXulknqnB9L9qUsgGFcUH6wYyCZWWuoNp3hOHSfgmLFpAU6v0aHAoCzxra7-uronT5Cv/pub?output=csv';
 
     async function cargarPartidos() {
-      const urls = [
-        SHEET_CSV_URL,
-        'https://api.allorigins.win/raw?url=' + encodeURIComponent(SHEET_CSV_URL),
-        'https://corsproxy.io/?' + encodeURIComponent(SHEET_CSV_URL)
-      ];
+      try {
+        // Usamos un proxy alternativo súper rápido y directo para evitar bloqueos CORS
+        const proxyUrl = 'https://api.allorigins.win/get?url=' + encodeURIComponent(SHEET_CSV_URL);
+        const res = await fetch(proxyUrl);
+        
+        if (!res.ok) throw new Error('Error de red');
+        
+        const data = await res.json();
+        const texto = data.contents;
 
-      let texto = null;
-      for (let url of urls) {
+        if (!texto || !texto.includes(',')) {
+          throw new Error('Formato inválido');
+        }
+
+        const lineas = texto.split('\n').map(r => r.trim()).filter(r => r);
+        if (lineas.length <= 1) {
+          document.getElementById('matches-list').innerHTML = '<div style="padding: 20px; text-align: center;">No hay partidos cargados en la planilla.</div>';
+          return;
+        }
+
+        const partidos = lineas.slice(1).map(linea => {
+          const col = linea.split(',').map(c => c.replace(/^"|"$/g, '').trim());
+          return {
+            hora: col[0] || '',
+            pais: col[1] || 'ar',
+            torneo: col[2] || '',
+            partido: col[3] || '',
+            streamUrl: col[4] || ''
+          };
+        });
+
+        renderAgenda(partidos);
+
+      } catch (e) {
+        // Plan B: Si falla el proxy, intentamos lectura directa por si acaso
         try {
-          const res = await fetch(url);
-          if (res.ok) {
-            texto = await res.text();
-            if (texto && texto.includes(',')) break;
-          }
-        } catch (e) {}
+          const resDirect = await fetch(SHEET_CSV_URL);
+          const textoDirect = await resDirect.text();
+          const lineas = textoDirect.split('\n').map(r => r.trim()).filter(r => r);
+          const partidos = lineas.slice(1).map(linea => {
+            const col = linea.split(',').map(c => c.replace(/^"|"$/g, '').trim());
+            return { hora: col[0]||'', pais: col[1]||'ar', torneo: col[2]||'', partido: col[3]||'', streamUrl: col[4]||'' };
+          });
+          renderAgenda(partidos);
+        } catch (err) {
+          document.getElementById('matches-list').innerHTML = '<div style="padding: 20px; text-align: center; color: red;">No se pudo conectar con la hoja de cálculo. Verifica que esté publicada en la web como CSV.</div>';
+        }
       }
-
-      if (!texto) {
-        document.getElementById('matches-list').innerHTML = '<div style="padding: 20px; text-align: center; color: red;">No se pudo leer la planilla.</div>';
-        return;
-      }
-
-      const lineas = texto.split('\n').map(r => r.trim()).filter(r => r);
-      if (lineas.length <= 1) {
-        document.getElementById('matches-list').innerHTML = '<div style="padding: 20px; text-align: center;">No hay partidos cargados.</div>';
-        return;
-      }
-
-      const partidos = lineas.slice(1).map(linea => {
-        const col = linea.split(',').map(c => c.replace(/^"|"$/g, '').trim());
-        return {
-          hora: col[0] || '',
-          pais: col[1] || 'ar',
-          torneo: col[2] || '',
-          partido: col[3] || '',
-          streamUrl: col[4] || ''
-        };
-      });
-
-      renderAgenda(partidos);
     }
 
     function renderAgenda(partidos) {
@@ -221,15 +229,12 @@
           finalUrl = finalUrl.replace('youtu.be/', 'youtube.com/embed/');
         }
 
-        // Detectar si es NBA / Básquet o un país
         let iconHtml = '';
         let valorPais = m.pais.toLowerCase().trim();
 
         if (valorPais === 'nba' || valorPais === 'basquet' || valorPais === 'basketball') {
-          // Ícono de básquetbol
           iconHtml = `<img src="https://cdn-icons-png.flaticon.com/512/889/889455.png" alt="NBA">`;
         } else {
-          // Convertir nombres comunes a códigos de bandera de 2 letras
           let countryCode = valorPais;
           if (valorPais === 'arg' || valorPais === 'argentina') countryCode = 'ar';
           if (valorPais === 'usa' || valorPais === 'eeuu' || valorPais === 'estados unidos') countryCode = 'us';
